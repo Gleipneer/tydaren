@@ -2,285 +2,328 @@
 Joakim Emilsson – YH25  
 Martin Fält – YH25  
 
-Syftet med systemet är att lagra och organisera personliga texter i ett reflektionsarkiv.  
-Användaren kan skapa poster, välja kategori, koppla begrepp och se vilka symboler eller ord som automatiskt hittas i texten.  
-Systemet innehåller också en valfri AI-funktion som kan ge en möjlig tolkning av en drömtext.
+Reflektionsarkiv är vårt databasprojekt där vi har byggt ett system för att lagra och organisera personliga texter.
 
-Vi har byggt systemet ovanpå databasen `reflektionsarkiv` och valt att dela upp datan i flera tabeller för att undvika dubbel lagring och få tydliga relationer mellan användare, poster, kategorier, begrepp och loggar.
+Vi har valt att låta användare skapa poster, välja kategori, koppla begrepp och se aktivitet som hör till posterna. Ovanpå databasen har vi också byggt ett webbsystem för att visa hur databasen fungerar i praktiken. Det finns även en valfri AI-funktion som kan ge en möjlig tolkning av en drömtext, men AI-delen är bara ett extra lager. Själva kärnan i projektet är databasen.
 
-Projektet består alltså av två delar:
+Vi har byggt projektet ovanpå databasen `reflektionsarkiv` och delat upp informationen i flera tabeller för att undvika onödig dubbel lagring och få tydliga relationer mellan användare, kategorier, poster, begrepp och loggar.
 
-1. **Databasen**, som är själva grunden i uppgiften  
-2. **Webbsystemet**, som används för att visa hur databasen fungerar i praktiken  
+--
 
----
+Systemets huvudidé
 
-## Systemets huvudfunktion
+Vi har gjort systemet för att en användare ska kunna:
 
-Systemet är gjort för att en användare ska kunna:
+- registrera sig och logga in
+- skapa egna poster
+- välja kategori på posten, till exempel dröm, vision, tanke, reflektion eller dikt
+- spara posten som privat eller publik
+- koppla begrepp till posten
+- se aktivitet kopplad till poster
+- i webbsystemet även kunna använda automatisk begreppsmatchning och valfri AI-tolkning
 
-- registrera sig och logga in  
-- skapa egna poster  
-- välja kategori på posten, till exempel dröm, tanke eller reflektion  
-- spara posten som privat eller publik  
-- koppla begrepp manuellt till posten  
-- få automatiskt hittade begrepp i texten  
-- se en möjlig AI-tolkning av en drömtext  
+Vi ser alltså databasen som grunden, medan webbsystemet används för att visa hur databasen fungerar i ett riktigt system.
 
-Det betyder att systemet både fungerar som ett arkiv och som en enkel tolkningsmiljö ovanpå databasen.
+--
 
----
+Databasens tabeller
 
-## Databasens tabeller
+-- Anvandare
 
-### Anvandare
+I tabellen `Anvandare` sparar vi information om de användare som kan använda systemet.
 
-Tabellen lagrar information om användare som kan skapa och läsa sina egna poster.
-
-Exempel på attribut:  
+Exempel på attribut:
 `AnvandarID`, `Anvandarnamn`, `Epost`, `LosenordHash`, `ArAdmin`, `SkapadDatum`
 
----
+Vi har gjort så att varje användare får ett unikt ID. E-postadressen måste också vara unik. Lösenord lagras inte i klartext utan som hash.
 
-### Kategorier
+--
 
-Här lagras de kategorier som en post kan tillhöra, till exempel dröm, tanke eller reflektion.
+-- Kategorier
 
-Exempel på attribut:  
-`KategoriID`, `Namn`
+I tabellen `Kategorier` sparar vi vilka typer av poster som finns i systemet.
 
----
+Exempel på attribut:
+`KategoriID`, `Namn`, `Beskrivning`
 
-### Poster
+Vi använder den här tabellen för att hålla isär olika typer av innehåll, till exempel dröm, vision, tanke, reflektion och dikt.
 
-Detta är den centrala tabellen i databasen. Här sparas själva innehållet som användaren skriver.
+--
 
-Exempel på attribut:  
+-- Poster
+
+`Poster` är den centrala tabellen i databasen. Här sparar vi själva texterna som användaren skriver.
+
+Exempel på attribut:
 `PostID`, `AnvandarID`, `KategoriID`, `Titel`, `Innehall`, `Synlighet`, `SkapadDatum`
 
-En post tillhör en användare och en kategori.
+Varje post hör till en användare och en kategori. Vi har också valt att låta varje post ha en synlighet, alltså om den är privat eller publik.
 
----
+--
 
-### Begrepp
+-- Begrepp
 
-Tabellen lagrar ord och symboler som systemet kan använda som begreppsbibliotek.
+I tabellen `Begrepp` sparar vi ord och symboler som kan kopplas till poster.
 
-Exempel på attribut:  
-`BegreppID`, `Ord`, `Beskrivning`
+Exempel på attribut:
+`BegreppID`, `Ord`, `Beskrivning`, `SkapadDatum`
 
-Här finns till exempel symboliska ord som kan användas vid matchning mot text.
+Detta fungerar som ett litet begreppsbibliotek där vi kan lagra ord som till exempel orm, vatten, tempel, svart, eld och resa.
 
----
+--
 
-### PostBegrepp
+-- PostBegrepp
 
-Detta är en kopplingstabell mellan `Poster` och `Begrepp`.
+`PostBegrepp` är kopplingstabellen mellan `Poster` och `Begrepp`.
 
-Den behövs eftersom:
-
-- en post kan ha flera begrepp  
-- ett begrepp kan förekomma i flera poster  
-
-Detta är alltså en **många-till-många-relation**.
-
-Exempel på attribut:  
+Exempel på attribut:
 `PostBegreppID`, `PostID`, `BegreppID`
 
----
+Vi behöver den här tabellen eftersom en post kan ha flera begrepp, och samma begrepp kan finnas i flera poster. Det är alltså en många-till-många-relation.
 
-### AktivitetLogg
+Vi har valt att lösa detta med en egen kopplingstabell i stället för att försöka lägga flera begrepp i samma kolumn. Det gör databasen tydligare och mer normaliserad.
 
-Denna tabell används för att logga vissa händelser i systemet, till exempel när en post skapas eller ändras.
+--
 
-Exempel på attribut:  
-`AktivitetID`, `PostID`, `Handelse`, `Tidpunkt`
+-- AktivitetLogg
 
----
+I tabellen `AktivitetLogg` sparar vi händelser som gäller poster.
 
-## Relationer
+Exempel på attribut:
+`LoggID`, `PostID`, `AnvandarID`, `Handelse`, `Tidpunkt`
 
-Databasen bygger på tydliga relationer mellan tabellerna.
+Här loggar vi till exempel när en ny post skapas eller när en post uppdateras.
 
-- En användare kan skapa flera poster  
-- En kategori kan användas av flera poster  
-- En post kan kopplas till flera begrepp  
-- Ett begrepp kan förekomma i flera poster  
-- En post kan ha flera logghändelser  
+--
 
-För att lösa relationen mellan poster och begrepp används tabellen `PostBegrepp`.
+Relationer i databasen
 
-Detta gör databasen mer normaliserad och tydligare att arbeta med.  
-På så sätt undviks onödig dubbel lagring av data.
+Vi har byggt databasen med tydliga relationer mellan tabellerna.
 
----
+- en användare kan ha flera poster
+- en kategori kan kopplas till flera poster
+- en post kan ha flera begrepp
+- ett begrepp kan förekomma i flera poster
+- en post kan ha flera logghändelser
 
-## Funktioner i systemet
+För att lösa många-till-många-relationen mellan poster och begrepp använder vi tabellen `PostBegrepp`.
 
-Utöver den grundläggande databasstrukturen innehåller projektet flera funktioner.
+Vi har gjort detta för att undvika dubbel lagring och för att få en tydlig och hållbar struktur.
 
-### Inloggning och användare
+--
 
-Systemet använder inloggning så att varje användare bara arbetar med sina egna poster.  
-Detta gör att systemet blir mer realistiskt än en databas där allt är helt öppet.
+Databasens regler och skydd
 
-Lösenord lagras inte i klartext utan som hash.
+Vi har använt flera vanliga databasregler för att hålla datan korrekt.
 
----
+Vi har använt:
 
-### Skapa och spara poster
+- `PRIMARY KEY`
+- `FOREIGN KEY`
+- `NOT NULL`
+- `UNIQUE`
+- `DEFAULT`
+- `CHECK`
 
-En användare kan skriva en titel, ett innehåll, välja kategori och välja om posten ska vara privat eller publik.
+Exempel på detta är att:
 
-Detta visas i frontend, men datan lagras i databasen.
+- varje tabell har en primärnyckel
+- relationer mellan tabellerna säkras med främmande nycklar
+- vissa fält inte får vara tomma
+- e-post och begrepp är unika där det behövs
+- vissa kolumner får standardvärden
+- postens titel kontrolleras så att den inte blir tom
 
----
+Vi har också använt `ON DELETE CASCADE` i kopplingar där det passar, så att kopplad data tas bort automatiskt när en post eller ett begrepp tas bort.
 
-### Begrepp och symbolmatchning
+--
 
-Systemet kan koppla begrepp till en post på två sätt:
+Triggers och lagrad procedur
 
-1. **manuellt**, när användaren själv väljer begrepp  
-2. **automatiskt**, när systemet känner igen ord i texten  
+För att uppfylla projektkraven har vi byggt in både triggers och en lagrad procedur i databasen.
 
-Detta gör att en post kan få fler lager av information än bara själva texten.
+-- Triggers
 
----
+Vi har två triggers i projektet:
 
-### AI-tolkning av drömmar
+- en trigger som loggar när en ny post skapas
+- en trigger som loggar när en post uppdateras
 
-Om en post är en drömtext kan användaren få en möjlig AI-tolkning.
+Båda skriver till tabellen `AktivitetLogg`.
 
-Denna funktion är inte själva kärnan i databasuppgiften, men visar hur databasen kan användas tillsammans med ett modernt system ovanpå.
+Vi har valt att göra detta i databasen i stället för att lägga all logik i backend. På det sättet kan databasen själv reagera på vissa händelser.
 
-AI-delen ska därför ses som ett extra lager, medan databasen fortfarande är den viktigaste delen i projektet.
+--
 
----
+-- Lagrad procedur
 
-## Triggers och lagrad procedur
+Vi har också gjort en lagrad procedur som heter `hamta_poster_per_kategori`.
 
-För att uppfylla uppgiftens krav innehåller databasen både triggers och lagrad procedur.
+Den används för att visa hur många poster som finns per kategori inom ett valt datumintervall.
 
-### Triggers
+Vi valde att ha detta i databasen för att visa att viss analyslogik kan ligga direkt där och inte bara i applikationen.
 
-Projektet använder triggers för att automatiskt logga händelser i `AktivitetLogg`.
+--
 
-Exempel:
-- när en ny post skapas  
-- när en post uppdateras  
+Transaktioner
 
-Detta gör att databasen själv kan reagera på förändringar, utan att all logik måste ligga i frontend eller backend.
+Vi har även visat transaktioner i projektet.
 
----
+I vår SQL-fil finns exempel där vi:
 
-### Lagrad procedur
+- gör en ändring
+- kontrollerar resultatet
+- använder `ROLLBACK` för att ångra ändringen
 
-Projektet innehåller också en lagrad procedur som hämtar poster per kategori inom ett visst datumintervall.
+Vi har också visat ett exempel med borttagning av en post och sedan ångrat den med `ROLLBACK`.
 
-Detta visar att viss analyslogik kan ligga direkt i databasen.
+Detta visar hur man kan arbeta säkrare med data och hur transaktioner hjälper till att skydda dataintegriteten.
 
----
+--
 
-## Säkerhet
+Säkerhet
 
 Vi har försökt hålla säkerheten på en rimlig nivå för ett skolprojekt.
 
-### I databasen
+-- I databasen
 
-- primärnycklar och främmande nycklar används för att hålla relationerna korrekta  
-- `NOT NULL`, `UNIQUE` och andra constraints används där det behövs  
-- appen ska använda ett begränsat databaskonto i stället för fulla root-rättigheter  
+Vi har arbetat med säkerhet genom att använda:
 
-### I systemet
+- primärnycklar och främmande nycklar för att hålla relationerna korrekta
+- `NOT NULL`, `UNIQUE`, `DEFAULT` och `CHECK` där det behövs
+- separata databasanvändare med olika rättigheter
 
-- lösenord lagras som hash  
-- JWT används för autentisering  
-- skrivoperationer kräver inloggning  
-- användaren kan bara arbeta med sina egna poster, medan admin har större rättigheter  
+Vi har till exempel en applikationsanvändare som bara ska ha de rättigheter som behövs i vanlig drift, och en separat administrativ användare för mer full kontroll vid till exempel setup eller migrationer.
 
----
+Vi har alltså tänkt på att appen inte ska behöva använda fulla root-rättigheter hela tiden.
 
-## Prestanda och index
+--
 
-För att databasen inte ska bli onödigt långsam har index lagts på kolumner som används ofta vid sökning, filtrering eller relationer.
+-- I systemet ovanpå databasen
 
-Exempel på sådana kolumner är:
+I webbsystemet har vi dessutom:
 
-- användar-id i poster  
-- kategori-id i poster  
-- datumkolumner  
-- begreppskopplingar  
-- loggtidpunkter  
+- hashade lösenord
+- autentisering med JWT
+- skyddade skrivoperationer
+- vanliga användare som bara ska kunna arbeta med sina egna poster
+- admin som har större rättigheter
 
-Detta gör systemet mer skalbart om mängden poster växer.
+Vi ser detta som ett extra skyddslager ovanpå databasen.
 
----
+--
 
-## Varför vi valde en relationsdatabas
+Prestanda och index
 
-Vi valde MySQL och relationsmodell eftersom datan är tydligt strukturerad.
+Vi har lagt index på de kolumner som används ofta vid relationer, sökningar, sortering och loggning.
 
-Systemet består av:
+Vi har till exempel index på:
 
-- användare  
-- poster  
-- kategorier  
-- begrepp  
-- kopplingar mellan poster och begrepp  
-- loggar  
+- `Poster(AnvandarID)` för att snabbare kunna hämta en användares poster
+- `Poster(KategoriID)` för att snabbare kunna filtrera poster per kategori
+- `Poster(SkapadDatum)` för att snabbare kunna sortera poster efter datum
+- `PostBegrepp(BegreppID)` för att snabbare kunna koppla och analysera begrepp
+- `AktivitetLogg(PostID, Tidpunkt)` för att snabbare kunna läsa loggar för en viss post i tidsordning
 
-Detta passar mycket bra i en relationsdatabas där man kan använda:
+Vi har alltså försökt tänka på prestanda redan i databasdesignen, även om detta är ett skolprojekt och inte en jättestor produktionsdatabas.
 
-- primärnycklar  
-- främmande nycklar  
-- JOIN  
-- GROUP BY  
-- constraints  
-- triggers  
-- procedurer  
+--
 
-En NoSQL-lösning hade fungerat sämre för just denna uppgift eftersom relationerna mellan datatyperna är viktiga.
+Varför vi valde relationsdatabas
 
----
+Vi valde MySQL och en relationsdatabas eftersom vår data är tydligt strukturerad och innehåller flera relationer mellan olika delar.
 
-## Reflektioner
+Vi arbetar med:
 
-När vi byggde databasen blev det tydligt att det viktigaste inte bara är att få något att fungera, utan att få strukturen att bli tydlig och hållbar.
+- användare
+- kategorier
+- poster
+- begrepp
+- kopplingar mellan poster och begrepp
+- aktivitetsloggar
 
-Det som varit viktigt i detta projekt är bland annat:
+Det passar bra i en relationsdatabas där vi kan använda:
 
-- att förstå varför tabellerna måste delas upp  
-- att förstå varför många-till-många-relationen mellan poster och begrepp behöver en egen kopplingstabell  
-- att hålla databasen normaliserad  
-- att tänka på säkerhet och rättigheter  
-- att skilja mellan det som hör hemma i databasen och det som hör hemma i systemet ovanpå  
+- primärnycklar
+- främmande nycklar
+- JOIN
+- GROUP BY
+- constraints
+- triggers
+- lagrad procedur
 
-Vi ser därför databasen som själva kärnan i projektet, medan frontend och AI-funktionerna används för att visa hur databasen kan användas i praktiken.
+Vi tycker att en NoSQL-lösning hade passat sämre här eftersom projektet bygger på tydliga relationer mellan tabellerna och på att datan ska vara lätt att kontrollera.
+
+--
+
+Vad som ligger i databasen och vad som ligger i systemet ovanpå
+
+Vi har försökt vara tydliga med vad som hör hemma i databasen och vad som hör hemma i systemet ovanpå.
+
+I databasen ligger:
+
+- användare
+- kategorier
+- poster
+- begrepp
+- kopplingar mellan poster och begrepp
+- aktivitetsloggar
+- regler, relationer, triggers och procedur
+
+I systemet ovanpå ligger:
+
+- inloggningsflöde
+- visning i frontend
+- funktioner för att skapa och läsa poster
+- automatisk begreppsmatchning i text
+- valfri AI-tolkning av drömtext
+
+Vi tycker att detta är viktigt eftersom databasen ska vara grunden, medan applikationen visar hur databasen kan användas i praktiken.
+
+--
+
+Reflektioner
+
+När vi byggde projektet blev det tydligt för oss att en databas inte bara handlar om att lagra data, utan om att lagra den på ett sätt som är tydligt, hållbart och lätt att arbeta med.
+
+Det som varit viktigast för oss i projektet är bland annat:
+
+- att förstå varför tabeller behöver delas upp
+- att förstå varför många-till-många-relationen mellan poster och begrepp behöver en egen kopplingstabell
+- att hålla databasen så normaliserad som möjligt
+- att tänka på dataintegritet
+- att tänka på säkerhet och rättigheter
+- att skilja mellan det som hör hemma i databasen och det som hör hemma i systemet ovanpå
+
+Vi har därför sett databasen som själva kärnan i projektet. Frontend och AI-funktionerna har vi använt för att visa hur databasen kan användas i ett riktigt system, men de ersätter inte databasen och är inte huvudfokus i uppgiften.
+
+--
 
 Slutsats
 
-Reflektionsarkiv är ett databassystem där användare kan lagra och organisera texter i olika kategorier.
-Systemet använder en relationsdatabas för att hålla ordning på användare, poster, begrepp och loggar.
+Reflektionsarkiv är vårt databassystem för att lagra och organisera personliga texter i olika kategorier.
 
-Det viktigaste i projektet är databasdesignen: tabellerna, relationerna, constraints, triggers, proceduren och säkerheten.
-Frontend och AI-tolkning är byggda ovanpå databasen för att göra systemet lättare att visa och förstå i praktiken.
+Vi har byggt en relationsdatabas med tydliga tabeller, relationer, constraints, triggers, lagrad procedur, säkerhetstänk och indexering.
 
-På så sätt blir projektet både ett databassystem och en konkret demonstration av hur databasen fungerar i ett riktigt användarsystem.
----
+Ovanpå databasen har vi byggt ett webbsystem för att göra det lättare att visa hur databasen fungerar i praktiken. Den valfria AI-funktionen är bara ett extra lager och inte det viktigaste i projektet.
 
-## Hur systemet körs
+På så sätt blir Reflektionsarkiv både ett databassystem och en konkret demonstration av hur en databas kan användas i ett riktigt användarsystem.
+
+--
+
+Hur systemet körs
 
 Projektet innehåller:
 
-- **backend** i Python / FastAPI  
-- **frontend** i React / Vite  
-- **databas** i MySQL  
+- backend i Python / FastAPI
+- frontend i React / Vite
+- databas i MySQL
 
-Systemet kan startas med färdiga startskript.
+Vi har färdiga startskript för att köra systemet.
 
-### Windows
+-- Windows
 
-```powershell
+-- powershell
 .\scripts\start.ps1
-``` Linux
+
 ./scripts/start.sh
