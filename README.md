@@ -1,4 +1,4 @@
-Hej - Reflektionsarkiv
+Reflektionsarkiv
 Joakim Emilsson – YH25  
 Martin Fält – YH25  
 
@@ -34,7 +34,7 @@ Exempel på kolumner:
 - `ArAdmin`
 - `SkapadDatum`
 
-Varje användare får ett unikt ID. E-postadressen är också unik. Lösenord lagras som hash och inte i klartext.
+Varje användare får ett unikt ID. E-postadressen är också unik. Lösenord lagras som saltad hash och inte i klartext. Saltningen sker genom python backend/app/security.
 
 -- Kategorier
 I tabellen `Kategorier` sparar vi vilka typer av poster som finns.
@@ -60,7 +60,7 @@ Exempel på kolumner:
 - `Synlighet`
 - `SkapadDatum`
 
-Varje post hör till en användare och en kategori.
+Varje post hör till en användare och en kategori. Varje post har också en synlighet, alltså om den är privat eller publik.
 
 -- Begrepp
 I tabellen `Begrepp` sparar vi ord och symboler som kan kopplas till poster.
@@ -82,7 +82,6 @@ Exempel på kolumner:
 - `PostBegreppID`
 - `PostID`
 - `BegreppID`
-- `Kommentar`
 
 Den behövs eftersom en post kan ha flera begrepp, och samma begrepp kan finnas i flera poster. Det är alltså en många-till-många-relation.
 
@@ -99,7 +98,7 @@ Exempel på kolumner:
 
 Här loggar vi till exempel när en ny post skapas eller när en post uppdateras.
 
-## Relationer i databasen
+-- Relationer i databasen
 
 Vi har byggt databasen med tydliga relationer mellan tabellerna.
 
@@ -111,7 +110,7 @@ Vi har byggt databasen med tydliga relationer mellan tabellerna.
 
 Många-till-många-relationen mellan poster och begrepp löses med tabellen `PostBegrepp`.
 
-## Databasens regler
+-- Databasens regler
 
 För att hålla datan korrekt använder vi vanliga databasregler som:
 
@@ -147,7 +146,7 @@ Vi har gjort en lagrad procedur som heter `hamta_poster_per_kategori`.
 
 Den används för att visa hur många poster som finns per kategori inom ett valt datumintervall.
 
-## Transaktioner
+-- Transaktioner
 
 Vi har även visat transaktioner i projektet.
 
@@ -168,7 +167,7 @@ Vi använder bland annat:
 - primärnycklar och främmande nycklar för att hålla relationerna korrekta
 - `NOT NULL`, `UNIQUE`, `DEFAULT` och `CHECK`
 - hashade lösenord
-- användare med olika rättigheter i systemet
+- stöd för administratör i systemet genom kolumnen `ArAdmin`
 
 Detta hjälper till att skydda både datan och strukturen i databasen.
 
@@ -181,13 +180,13 @@ Exempel på sådana index är:
 - `Poster(AnvandarID)`
 - `Poster(KategoriID)`
 - `Poster(SkapadDatum)`
-- `PostBegrepp(PostID)`
-- `PostBegrepp(BegreppID)`
+- unikt index på `PostBegrepp(PostID, BegreppID)`
+- index på `PostBegrepp(BegreppID)`
 - `AktivitetLogg(PostID, Tidpunkt)`
 
 Det gör databasen mer effektiv när man hämtar och söker data.
 
-## Varför vi valde en relationsdatabas
+-- Varför vi valde en relationsdatabas
 
 Vi valde MySQL och en relationsdatabas eftersom vår data är tydligt strukturerad och innehåller flera relationer mellan olika delar.
 
