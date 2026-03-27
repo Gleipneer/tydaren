@@ -1,4 +1,4 @@
-import { get, post } from "./api";
+import { post } from "./api";
 import type { SessionUser } from "./authStorage";
 
 export interface User {

@@ -33,6 +33,9 @@ venv/
 # Lokala mysqldump-filer (se database/scripts/backup.ps1)
 backups/
 
+# Kompanjon Workbench (lösenord) – genereras av scripts/setup-companion-workbench.sh
+database/COMPANION_WORKBENCH.txt
+
 # Databases
 *.sqlite
 *.db

@@ -2,6 +2,9 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
 
+// Set TYDAREN_FUNNEL_HOST (see npm run dev:funnel) so HMR uses wss:443 via Tailscale Funnel.
+const funnelHost = (process.env.TYDAREN_FUNNEL_HOST ?? "").replace(/\.$/, "");
+
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
@@ -12,7 +15,14 @@ export default defineConfig({
     strictPort: true,
     // Tailscale MagicDNS hostnames when not using raw 100.x IP
     allowedHosts: [".ts.net", ".tailscale.net"],
-    hmr: { overlay: false, clientPort: 5173 },
+    hmr: funnelHost
+      ? {
+          overlay: false,
+          protocol: "wss",
+          host: funnelHost,
+          clientPort: 443,
+        }
+      : { overlay: false },
     proxy: {
       "/api": { target: "http://127.0.0.1:8000", changeOrigin: true },
     },
