@@ -109,6 +109,8 @@ def run_all_migrations(*, emit: bool = True) -> None:
         password=settings.DB_PASSWORD,
         charset="utf8mb4",
         collation="utf8mb4_unicode_ci",
+        use_unicode=True,
+        init_command="SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci",
     )
     try:
         for name in files:

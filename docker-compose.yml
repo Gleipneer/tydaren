@@ -1,0 +1,28 @@
+# Lokal MySQL för Reflektionsarkiv (FastAPI + Vite).
+# Start: docker compose up -d
+# Första gången importeras reflektionsarkiv.sql automatiskt.
+services:
+  mysql:
+    image: mysql:8.0.40
+    container_name: tydaren-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: tydaren_local_dev
+      MYSQL_DATABASE: reflektionsarkiv
+    ports:
+      - "3306:3306"
+    volumes:
+      - tydaren_mysql_data:/var/lib/mysql
+      - ./reflektionsarkiv.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-ptydaren_local_dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+volumes:
+  tydaren_mysql_data:

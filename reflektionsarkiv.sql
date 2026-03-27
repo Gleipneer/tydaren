@@ -1,7 +1,7 @@
 /*
 SQL slutprojekt "Reflektionsarkiv".
-Joakim Emilsson - YH24
-Martin Fält - YH24
+Joakim Emilsson - YH25
+Martin Fält - YH25
 */
 
 -- Tar bort databasen om den redan finns så att filen går att köra om från början

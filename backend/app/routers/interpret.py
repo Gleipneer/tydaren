@@ -13,7 +13,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.config import settings
 from app.deps import get_current_user_id
-from app.db import get_connection
+from app.db import get_connection, repairing_dict_cursor
 from app.repositories import concept_repo, post_repo
 from app.schemas.interpret import (
     InterpretResponse,
@@ -216,7 +216,7 @@ Du svarar bara på svenska."""
 
 def _get_post_with_concepts(conn, post_id: int) -> dict | None:
     """Hämta post med titel, innehåll och kopplade begrepp."""
-    cur = conn.cursor(dictionary=True)
+    cur = repairing_dict_cursor(conn)
     cur.execute(
         "SELECT p.PostID, p.Titel, p.Innehall, k.Namn AS KategoriNamn FROM Poster p "
         "JOIN Kategorier k ON p.KategoriID = k.KategoriID WHERE p.PostID = %s",

@@ -2,6 +2,8 @@ Reflektionsarkiv
 Joakim Emilsson – YH25  
 Martin Fält – YH25  
 
+**Lokal utveckling:** se [START.md](START.md).
+
 Reflektionsarkiv är vårt slutprojekt i kursen Databaser.  
 Projektets huvuddel är en relationsdatabas i MySQL som används för att lagra och organisera personliga texter.
 
@@ -120,6 +122,7 @@ För att hålla datan korrekt använder vi vanliga databasregler som:
 - `UNIQUE`
 - `DEFAULT`
 - `CHECK`
+- `CONSTRAINT`
 
 Det innebär bland annat att:
 
@@ -166,7 +169,7 @@ Vi använder bland annat:
 
 - primärnycklar och främmande nycklar för att hålla relationerna korrekta
 - `NOT NULL`, `UNIQUE`, `DEFAULT` och `CHECK`
-- hashade lösenord
+- lösenorden är hashade och saltade
 - stöd för administratör i systemet genom kolumnen `ArAdmin`
 
 Detta hjälper till att skydda både datan och strukturen i databasen.
